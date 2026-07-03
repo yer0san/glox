@@ -184,12 +184,6 @@ func (l *Lexer) number() {
 	l.addT(NUMBER, value)
 }
 
-func (l *Lexer) peekNext() rune {
-	if l.current + 1 >= len(l.source) {
-		return '0'
-	}
-	return rune(l.source[l.current+1])
-}
 
 func (l *Lexer) match(expected rune) bool {
 	if l.isAtEnd() {
@@ -206,10 +200,17 @@ func (l *Lexer) match(expected rune) bool {
 
 func (l *Lexer) peek() rune {
 	if l.isAtEnd(){
-		// FIX: what do we return here?
-		return '\n'
+		// FIX: what do we return here -- FIXED i think
+		return rune(0)
 	}
 	return rune(l.source[l.current])
+}
+
+func (l *Lexer) peekNext() rune {
+	if l.current + 1 >= len(l.source) {
+		return rune(0)
+	}
+	return rune(l.source[l.current+1])
 }
 
 func (l *Lexer) advance() rune {
@@ -238,8 +239,8 @@ func (l *Lexer) str() {
 	for l.peek() != '"' && !l.isAtEnd() {
 		if l.peek() == '\n' { // FIX: again, new line??
 			l.line++
-			l.advance()
 		}
+		l.advance()
 	}
 
 	if l.isAtEnd() {
