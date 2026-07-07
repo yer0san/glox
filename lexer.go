@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"fmt"
+	"strconv"
+)
 
 type Lexer struct {
 	source 		string
@@ -88,8 +91,8 @@ func (l *Lexer) scanToken() {
 				l.addToken(BANG)
 			}
 		case '=':
-			b := l.match('=')
-			if b {
+		
+			if b := l.match('='); b {
 				l.addToken(EQUAL_EQUAL)
 			} else {
 				l.addToken(EQUAL)
@@ -110,18 +113,23 @@ func (l *Lexer) scanToken() {
 			}
 		case '/':
 			if l.match('/'){
-				// FIX: peek return - should be newline but idk how to do that
+				fmt.Println("COMMENT FOUND")
 				for l.peek() != '\n' && !l.isAtEnd() {
 					l.advance()
 				}
+
+			} else if l.match('*') {
+				fmt.Println("multiline found")
+				l.multilineComment()
+
 			} else {
 				l.addToken(SLASH)
 			}
 		case ' ':
-		case '\r': // FIX: what is \r
-		case '\t': //FIX: what is \t
+		case '\r': 
+		case '\t':
 			break
-		case '\n': // FIX: what is \n
+		case '\n': 
 			l.line++
 		case '"':
 			l.str()
@@ -138,8 +146,24 @@ func (l *Lexer) scanToken() {
 	}
 }
 
+func (l *Lexer) multilineComment() {
+	for !l.isAtEnd() {
+		if l.peek() == '*' && l.peekNext() == '/' {
+			l.advance()
+			l.advance()
+			return
+		}
+
+		if l.peek() == '\n'{
+			l.line++
+		}
+		l.advance()
+	}
+	reportError(l.line, "Unterminated multiline comment")
+}
+
 func (l *Lexer) identifier() {
-	for l.isAlphaNumberic(l.peek()) {
+	for l.isAlphaNumeric(l.peek()) {
 		l.advance()
 	}
 	text := l.source[l.start:l.current]
@@ -155,7 +179,7 @@ func (l *Lexer) isAlpha(c rune) bool {
 	return (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c == '_')
 }
 
-func (l *Lexer) isAlphaNumberic(c rune) bool {
+func (l *Lexer) isAlphaNumeric(c rune) bool {
 	return l.isAlpha(c) || l.isDigit(c)
 }
 
@@ -237,7 +261,7 @@ func (l *Lexer) addT(tokenType TokenType, literal any) {
 
 func (l *Lexer) str() {
 	for l.peek() != '"' && !l.isAtEnd() {
-		if l.peek() == '\n' { // FIX: again, new line??
+		if l.peek() == '\n' {
 			l.line++
 		}
 		l.advance()

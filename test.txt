@@ -1,1 +1,7 @@
-hello there
+var my = "hello"
+print(my)
+// a comment :)
+/* this is a multiline comment
+that spans multiple lines
+*/
+print(yelo)
