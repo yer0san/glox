@@ -37,8 +37,8 @@ var keywords = map[string]TokenType{
 	"or":     OR,
 	"print":  PRINT,
 	"return": RETURN,
-	// "super":  SUPER,
-	// "this":   THIS,
+	"super":  SUPER,
+	"this":   THIS,
 	"true":   TRUE,
 	"var":    VAR,
 	"while":  WHILE,
@@ -140,7 +140,7 @@ func (l *Lexer) scanToken() {
 			} else if l.isAlpha(c) {
 				l.identifier();
 			} else {
-				reportError(l.line, "unexpected character.")
+				reportError(l.line, ErrUnexpectedChar)
 			}
 	
 	}
@@ -159,7 +159,7 @@ func (l *Lexer) multilineComment() {
 		}
 		l.advance()
 	}
-	reportError(l.line, "Unterminated multiline comment")
+	reportError(l.line, ErrunterminatedMultilineComment)
 }
 
 func (l *Lexer) identifier() {
@@ -268,7 +268,7 @@ func (l *Lexer) str() {
 	}
 
 	if l.isAtEnd() {
-		reportError(l.line, "unterminated string")
+		reportError(l.line, ErrUnterminatedString)
 		return
 	}
 

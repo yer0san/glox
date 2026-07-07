@@ -46,6 +46,8 @@ const (
     TRUE
     VAR
     WHILE
+    SUPER
+    THIS
 
     EOF
 )
