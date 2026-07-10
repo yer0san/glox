@@ -46,3 +46,58 @@ func (l *Literal) Accept(v Visitor) any {
 func (u *Unary) Accept(v Visitor) any {
 	return v.VisitUnaryExpr(u)
 }
+
+
+
+// ----------------------------------------------------
+// Ignore
+// this is practice
+
+type ExprForRpn interface {
+	AcceptRpn(v VisitorForRpn) any
+}
+
+type BinaryRpn struct {
+	Left ExprForRpn
+	Operator Token
+	Right ExprForRpn
+}
+
+type LiteralRpn struct {
+	Value any
+}
+
+type GroupingRpn struct {
+	Expression ExprForRpn
+}
+
+type UnaryRpn struct {
+	Operator Token
+	Right ExprForRpn
+}
+
+type VisitorForRpn interface {
+	VisitBinary(expr *BinaryRpn) any
+	VisitLiteral(expr *LiteralRpn) any
+	VisitGrouping(expr *GroupingRpn) any
+	VisitUnary(expr *UnaryRpn) any
+} // this is a temporary practice code, or not
+
+func (b *BinaryRpn) AcceptRpn(v VisitorForRpn) any {
+	return v.VisitBinary(b)
+}
+
+func (g *GroupingRpn) AcceptRpn(v VisitorForRpn) any {
+	return v.VisitGrouping(g)
+}
+
+func (l *LiteralRpn) AcceptRpn(v VisitorForRpn) any {
+	return v.VisitLiteral(l)
+}
+
+func (u *UnaryRpn) AcceptRpn(v VisitorForRpn) any {
+	return v.VisitUnary(u)
+}
+
+
+// ----------------------------------------------------

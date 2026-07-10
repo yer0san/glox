@@ -57,11 +57,53 @@ func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {
 // 			Right:    &Literal{Value: 123.0},
 // 		},
 // 		Operator: Token{token_type: STAR, lexeme: "*", literal: nil, line: 1},
-// 		Right: &Grouping{
-// 			Expression: &Literal{Value: 45.67},
+// 		Right: &Unary{
+// 			Operator: Token{token_type: BANG, lexeme: "!", literal: nil, line: 1},
+// 			Right: &Literal{Value: 45.67},
 // 		},
 // 	}
+
+// 	expression2 := &Binary{
+// 		Left : &Grouping{
+// 			Expression : &Binary{
+// 				Left : &Literal{
+// 					Value : 1,
+// 				},
+// 				Operator: Token{
+// 					token_type: PLUS,
+// 					lexeme: "+",
+// 					literal: nil,
+// 					line: 1,
+// 				}, // i can use the constructor too
+// 				Right: &Literal{
+// 					Value: 2,
+// 				},
+// 			},
+// 		},
+// 		Operator: NewToken(STAR, "*", nil, 1), // using constructor
+// 		Right : & Grouping{
+// 			Expression : &Binary{
+// 				Left : &Literal{
+// 					Value : 4,
+// 				},
+// 				Operator: Token{
+// 					token_type: MINUS,
+// 					lexeme: "-",
+// 					literal: nil,
+// 					line: 1,
+// 				},
+// 				Right: &Literal{
+// 					Value: 2,
+// 				},
+// 			},
+// 		},
+// 	}
+
+
 // // the expression was originally --    -123 * 45.67  so the precedence works
 // 	printer := &AstPrinter{}
 // 	fmt.Println(printer.Print(expression))
+// 	fmt.Println(printer.Print(expression2))
+// 	// so it already prints Parent Left Right recursivelyf
 // }
+
