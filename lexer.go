@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 )
 
@@ -113,13 +112,11 @@ func (l *Lexer) scanToken() {
 			}
 		case '/':
 			if l.match('/'){
-				fmt.Println("COMMENT FOUND")
 				for l.peek() != '\n' && !l.isAtEnd() {
 					l.advance()
 				}
 
 			} else if l.match('*') {
-				fmt.Println("multiline found")
 				l.multilineComment()
 
 			} else {

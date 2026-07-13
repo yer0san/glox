@@ -9,8 +9,6 @@ type Token struct {
 	line 		int
 }
 
-// How do we define a constructor method ??
-
 func NewToken(token_type TokenType, lexeme string, literal any, line int) Token{
 	return Token{token_type, lexeme, literal, line}
 }
