@@ -61,17 +61,33 @@ func (l *Lox) run(source string) {
 
 	tokens := lexer.scanTokens()
 
-	for _, token := range tokens {
-		fmt.Println(token)
+	parser := Parser{tokens: tokens}
+	expr, err := parser.parse()
+
+	if err != nil {
+		// idk what to do here
+		// maybe get the program to go into a panic mode or something
+		return
 	}
+	printer := &AstPrinter{}
+	fmt.Println(printer.Print(expr))
 }
 
 func reportError(line int, err error) {
 	report(line, "", err)
 }
 
+func reportParserError(token *Token, err error) {
+	if token.token_type == EOF {
+		report(token.line, " at end", err)
+	} else {
+		where := fmt.Sprintf("at '%s'", token.lexeme)
+		report(token.line, where, err)
+	}
+} // check it out later
+
 func report(line int, where string, err error) {
-	fmt.Printf("[line %d Error %s: %s\n", line, where, err)
+	fmt.Printf("[line %d] Error %s: %s\n", line, where, err)
 	hadError = true;
 }
 
