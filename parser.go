@@ -11,10 +11,56 @@ func NewParser(tokens []*Token) *Parser{
 }
 
 func (p *Parser) expression() (Expr, error) {
-	return p.equality()
+	return p.comma()
+}
+
+func (p *Parser) comma() (Expr, error) {
+	if p.match(COMMA) {
+		reportParserError(p.previous(), ErrExpectedLeftOpr)
+
+		_, err := p.equality()
+		
+		if err != nil {
+			return nil, err
+		}
+		return nil, ErrExpectedLeftOpr
+	}
+
+	expr, err := p.equality()
+
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(COMMA) {
+		operator := *p.previous()
+		right, err := p.equality()
+
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &Binary {
+			Left: expr,
+			Operator: operator,
+			Right: right,
+		}
+	}
+	return expr, nil
 }
 
 func (p *Parser) equality() (Expr, error) {
+	if p.match(BANG_EQUAL, EQUAL_EQUAL) {
+		reportParserError(p.previous(), ErrExpectedLeftOpr)
+
+		_, err := p.comparison()
+		
+		if err != nil {
+			return nil, err
+		}
+		return nil, ErrExpectedLeftOpr
+	}
+
 	expr, err := p.comparison()
 
 	if err != nil {
@@ -40,6 +86,17 @@ func (p *Parser) equality() (Expr, error) {
 }
 
 func (p *Parser) comparison() (Expr, error) {
+	if p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
+		reportParserError(p.previous(), ErrExpectedLeftOpr)
+
+		_, err := p.term()
+		
+		if err != nil {
+			return nil, err
+		}
+		return nil, ErrExpectedLeftOpr
+	}
+
 	expr, err := p.term()
 
 	if err != nil {
@@ -65,6 +122,17 @@ func (p *Parser) comparison() (Expr, error) {
 }
 
 func (p *Parser) term() (Expr, error) {
+	if p.match(MINUS, PLUS) {
+		reportParserError(p.previous(), ErrExpectedLeftOpr)
+
+		_, err := p.factor()
+		
+		if err != nil {
+			return nil, err
+		}
+		return nil, ErrExpectedLeftOpr
+	}
+
 	expr, err := p.factor()
 
 	if err != nil {
@@ -89,6 +157,17 @@ func (p *Parser) term() (Expr, error) {
 }
 
 func (p *Parser) factor() (Expr, error) {
+	if p.match(SLASH, STAR) {
+		reportParserError(p.previous(), ErrExpectedLeftOpr)
+
+		_, err := p.unary()
+		
+		if err != nil {
+			return nil, err
+		}
+		return nil, ErrExpectedLeftOpr
+	}
+
 	expr, err := p.unary()
 
 	if err != nil {
@@ -123,7 +202,7 @@ func (p *Parser) unary() (Expr, error) {
 
 		return &Unary{Operator: opr, Right: right}, nil
 	}
-	return p.primary()  // look this through
+	return p.primary()
 }
 
 func (p *Parser) primary() (Expr, error) {
@@ -156,6 +235,7 @@ func (p *Parser) primary() (Expr, error) {
 
 		return &Grouping{Expression: expr}, nil
 	}
+
 	reportParserError(p.peek(), ErrExpectExpression)
 	return nil, ErrExpectExpression
 }
@@ -226,7 +306,4 @@ func (p *Parser) synchronize() {
 
 func (p *Parser) parse() (Expr, error) {
 	return p.expression()  
-}
-
-// I don't think i can do the comma operation on my own
-// nor the others tbh, SKILL ISSUES
+} // entry method
