@@ -2,7 +2,7 @@ package main
 
 
 type Expr interface {
-	Accept(v Visitor) any
+	Accept(v Visitor) (any, error)
 }
 
 type Binary struct {
@@ -25,26 +25,30 @@ type Unary struct {
 }
 
 type Visitor interface {
-	VisitBinaryExpr(expr *Binary) any
-	VisitLiteralExpr(expr *Literal) any
-	VisitGroupingExpr(expr *Grouping) any
-	VisitUnaryExpr(expr *Unary) any
-} // TODO : possible change to generics
-
-func (b *Binary) Accept(v Visitor) any {
-	return v.VisitBinaryExpr(b)
+	VisitBinaryExpr(expr *Binary) (any, error)
+	VisitLiteralExpr(expr *Literal) (any, error)
+	VisitGroupingExpr(expr *Grouping) (any, error)
+	VisitUnaryExpr(expr *Unary) (any, error)
 }
 
-func (g *Grouping) Accept(v Visitor) any {
-	return v.VisitGroupingExpr(g)
+func (b *Binary) Accept(v Visitor) (any, error) {
+	res, _ := v.VisitBinaryExpr(b)
+	return res, nil
 }
 
-func (l *Literal) Accept(v Visitor) any {
-	return v.VisitLiteralExpr(l)
+func (g *Grouping) Accept(v Visitor) (any, error) {
+	res, _ := v.VisitGroupingExpr(g)
+	return res, nil
 }
 
-func (u *Unary) Accept(v Visitor) any {
-	return v.VisitUnaryExpr(u)
+func (l *Literal) Accept(v Visitor) (any, error) {
+	res, _ := v.VisitLiteralExpr(l)
+	return res, nil
+}
+
+func (u *Unary) Accept(v Visitor) (any, error) {
+	res, _ := v.VisitUnaryExpr(u)
+	return res, nil
 }
 
 

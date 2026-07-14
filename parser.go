@@ -1,4 +1,3 @@
-// will refactor all the code into packages of their own
 package main 
 
 type Parser struct {
@@ -16,7 +15,7 @@ func (p *Parser) expression() (Expr, error) {
 
 func (p *Parser) comma() (Expr, error) {
 	if p.match(COMMA) {
-		reportParserError(p.previous(), ErrExpectedLeftOpr)
+		reportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.equality()
 		
@@ -51,7 +50,7 @@ func (p *Parser) comma() (Expr, error) {
 
 func (p *Parser) equality() (Expr, error) {
 	if p.match(BANG_EQUAL, EQUAL_EQUAL) {
-		reportParserError(p.previous(), ErrExpectedLeftOpr)
+		reportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.comparison()
 		
@@ -87,7 +86,7 @@ func (p *Parser) equality() (Expr, error) {
 
 func (p *Parser) comparison() (Expr, error) {
 	if p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
-		reportParserError(p.previous(), ErrExpectedLeftOpr)
+		reportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.term()
 		
@@ -123,7 +122,7 @@ func (p *Parser) comparison() (Expr, error) {
 
 func (p *Parser) term() (Expr, error) {
 	if p.match(MINUS, PLUS) {
-		reportParserError(p.previous(), ErrExpectedLeftOpr)
+		reportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.factor()
 		
@@ -158,7 +157,7 @@ func (p *Parser) term() (Expr, error) {
 
 func (p *Parser) factor() (Expr, error) {
 	if p.match(SLASH, STAR) {
-		reportParserError(p.previous(), ErrExpectedLeftOpr)
+		reportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.unary()
 		
@@ -236,7 +235,7 @@ func (p *Parser) primary() (Expr, error) {
 		return &Grouping{Expression: expr}, nil
 	}
 
-	reportParserError(p.peek(), ErrExpectExpression)
+	reportError(p.peek(), ErrExpectExpression)
 	return nil, ErrExpectExpression
 }
 
@@ -284,7 +283,7 @@ func (p *Parser) consume(tknType TokenType) (*Token, error) {
 	if p.check(tknType) {
 		return p.advance(), nil
 	}
-	reportParserError(p.peek(), ErrMissingRightParen)
+	reportError(p.peek(), ErrMissingRightParen)
 	return nil, ErrMissingRightParen
 }
 

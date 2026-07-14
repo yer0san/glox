@@ -137,7 +137,7 @@ func (l *Lexer) scanToken() {
 			} else if l.isAlpha(c) {
 				l.identifier();
 			} else {
-				reportError(l.line, ErrUnexpectedChar)
+				reportLexingError(l.line, ErrUnexpectedChar)
 			}
 	
 	}
@@ -156,7 +156,7 @@ func (l *Lexer) multilineComment() {
 		}
 		l.advance()
 	}
-	reportError(l.line, ErrunterminatedMultilineComment)
+	reportLexingError(l.line, ErrunterminatedMultilineComment)
 }
 
 func (l *Lexer) identifier() {
@@ -265,7 +265,7 @@ func (l *Lexer) str() {
 	}
 
 	if l.isAtEnd() {
-		reportError(l.line, ErrUnterminatedString)
+		reportLexingError(l.line, ErrUnterminatedString)
 		return
 	}
 

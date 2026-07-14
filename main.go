@@ -71,20 +71,24 @@ func (l *Lox) run(source string) {
 	}
 	printer := &AstPrinter{}
 	fmt.Println(printer.Print(expr))
+	
+	interpreter := Interpreter{}
+
+	interpreter.interpret(expr)
 }
 
-func reportError(line int, err error) {
+func reportLexingError(line int, err error) {
 	report(line, "", err)
 }
 
-func reportParserError(token *Token, err error) {
+func reportError(token *Token, err error) {
 	if token.token_type == EOF {
 		report(token.line, " at end", err)
 	} else {
 		where := fmt.Sprintf("at '%s'", token.lexeme)
 		report(token.line, where, err)
 	}
-} // check it out later
+}
 
 func report(line int, where string, err error) {
 	fmt.Printf("[line %d] Error %s: %s\n", line, where, err)
