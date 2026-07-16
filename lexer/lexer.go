@@ -1,7 +1,9 @@
-package main
+package lexer
 
 import (
 	"strconv"
+	. "github.com/yer0san/glox/token"
+	. "github.com/yer0san/glox/errors"
 )
 
 type Lexer struct {
@@ -43,7 +45,7 @@ var keywords = map[string]TokenType{
 	"while":  WHILE,
 }
 
-func (l *Lexer) scanTokens() []*Token {
+func (l *Lexer) ScanTokens() []*Token {
 	for !l.isAtEnd() {
 		l.start = l.current
 		l.scanToken()
@@ -137,7 +139,7 @@ func (l *Lexer) scanToken() {
 			} else if l.isAlpha(c) {
 				l.identifier();
 			} else {
-				reportLexingError(l.line, ErrUnexpectedChar)
+				ReportLexingError(l.line, ErrUnexpectedChar)
 			}
 	
 	}
@@ -156,7 +158,7 @@ func (l *Lexer) multilineComment() {
 		}
 		l.advance()
 	}
-	reportLexingError(l.line, ErrunterminatedMultilineComment)
+	ReportLexingError(l.line, ErrunterminatedMultilineComment)
 }
 
 func (l *Lexer) identifier() {
@@ -247,10 +249,10 @@ func (l *Lexer) addToken(tokenType TokenType) {
 func (l *Lexer) addT(tokenType TokenType, literal any) {
 	text := l.source[l.start: l.current]
 	token := &Token{
-				token_type: tokenType, 
-				lexeme: text,
-				literal: literal, 
-				line: l.line,
+				Token_type: tokenType, 
+				Lexeme: text,
+				Literal: literal, 
+				Line: l.line,
 			}
 
 	l.tokens = append(l.tokens, token)
@@ -265,7 +267,7 @@ func (l *Lexer) str() {
 	}
 
 	if l.isAtEnd() {
-		reportLexingError(l.line, ErrUnterminatedString)
+		ReportLexingError(l.line, ErrUnterminatedString)
 		return
 	}
 

@@ -1,8 +1,9 @@
-package main
+package printers
 
 import (
 	"fmt"
 	"strings"
+	. "github.com/yer0san/glox/expr"
 )
 
 type AstPrinter struct {}
@@ -13,7 +14,7 @@ func (p *AstPrinter) Print(expr Expr) string {
 } 
 
 func (p *AstPrinter) VisitBinaryExpr(expr *Binary) (any, error) {
-	return p.parenthesize(expr.Operator.lexeme, expr.Left, expr.Right), nil
+	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right), nil
 }
 
 func (p *AstPrinter) VisitGroupingExpr(expr *Grouping) (any, error) {
@@ -28,7 +29,7 @@ func (p *AstPrinter) VisitLiteralExpr(expr *Literal) (any, error) {
 }
 
 func (p *AstPrinter) VisitUnaryExpr(expr *Unary) (any, error) {
-	return p.parenthesize(expr.Operator.lexeme, expr.Right), nil
+	return p.parenthesize(expr.Operator.Lexeme, expr.Right), nil
 }
 
 func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {

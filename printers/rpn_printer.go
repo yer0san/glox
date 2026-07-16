@@ -1,10 +1,11 @@
 // practice program
 
-package main 
+package printers 
 
 import (
 	"fmt"
 	"strings"
+	. "github.com/yer0san/glox/expr"
 )
 type RpnPrinter struct {}
 
@@ -13,7 +14,7 @@ func (p *RpnPrinter) Print(expr ExprForRpn) string {
 }
 
 func (p *RpnPrinter) VisitBinary(expr *BinaryRpn) any {
-	return p.buildRpn(expr.Operator.lexeme, expr.Left, expr.Right)
+	return p.buildRpn(expr.Operator.Lexeme, expr.Left, expr.Right)
 }
 
 func (p *RpnPrinter) VisitGrouping(expr *GroupingRpn) any {
@@ -29,7 +30,7 @@ func (p *RpnPrinter) VisitLiteral(expr *LiteralRpn) any {
 
 func (p *RpnPrinter) VisitUnary(expr *UnaryRpn) any {
 	// TODO : not correct, try to fix
-	return p.buildRpn(expr.Operator.lexeme, expr.Right)
+	return p.buildRpn(expr.Operator.Lexeme, expr.Right)
 }
 
 // real logic

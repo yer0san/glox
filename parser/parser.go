@@ -1,12 +1,18 @@
-package main 
+package parser 
+
+import (
+	. "github.com/yer0san/glox/token"
+	. "github.com/yer0san/glox/expr"
+	. "github.com/yer0san/glox/errors"
+)
 
 type Parser struct {
-	tokens []*Token
+	Tokens []*Token
 	current int // starts at 0 by default ig
 }
 
 func NewParser(tokens []*Token) *Parser{
-	return &Parser{tokens: tokens}
+	return &Parser{Tokens: tokens}
 }
 
 func (p *Parser) expression() (Expr, error) {
@@ -15,7 +21,7 @@ func (p *Parser) expression() (Expr, error) {
 
 func (p *Parser) comma() (Expr, error) {
 	if p.match(COMMA) {
-		reportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.equality()
 		
@@ -50,7 +56,7 @@ func (p *Parser) comma() (Expr, error) {
 
 func (p *Parser) equality() (Expr, error) {
 	if p.match(BANG_EQUAL, EQUAL_EQUAL) {
-		reportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.comparison()
 		
@@ -86,7 +92,7 @@ func (p *Parser) equality() (Expr, error) {
 
 func (p *Parser) comparison() (Expr, error) {
 	if p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
-		reportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.term()
 		
@@ -122,7 +128,7 @@ func (p *Parser) comparison() (Expr, error) {
 
 func (p *Parser) term() (Expr, error) {
 	if p.match(MINUS, PLUS) {
-		reportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.factor()
 		
@@ -157,7 +163,7 @@ func (p *Parser) term() (Expr, error) {
 
 func (p *Parser) factor() (Expr, error) {
 	if p.match(SLASH, STAR) {
-		reportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftOpr)
 
 		_, err := p.unary()
 		
@@ -216,7 +222,7 @@ func (p *Parser) primary() (Expr, error) {
 	}
 
 	if p.match(NUMBER, STRING) {
-		return &Literal{Value: p.previous().literal}, nil 
+		return &Literal{Value: p.previous().Literal}, nil 
 	}
 
 	if p.match(LEFT_PAREN) {
@@ -235,7 +241,7 @@ func (p *Parser) primary() (Expr, error) {
 		return &Grouping{Expression: expr}, nil
 	}
 
-	reportError(p.peek(), ErrExpectExpression)
+	ReportError(p.peek(), ErrExpectExpression)
 	return nil, ErrExpectExpression
 }
 
@@ -255,7 +261,7 @@ func (p *Parser) check(tokentype TokenType) bool {
 		return false
 	}
 	token := p.peek()
-	return token.token_type == tokentype
+	return token.Token_type == tokentype
 }
 
 func (p *Parser) advance() *Token {
@@ -267,15 +273,15 @@ func (p *Parser) advance() *Token {
 
 func (p *Parser) isAtEnd() bool {
 	token := p.peek()
-	return token.token_type == EOF
+	return token.Token_type == EOF
 }
 
 func (p *Parser) peek() *Token {
-	return p.tokens[p.current]
+	return p.Tokens[p.current]
 }
 
 func (p *Parser) previous() *Token {
-	return p.tokens[p.current-1]
+	return p.Tokens[p.current-1]
 }
 
 
@@ -283,7 +289,7 @@ func (p *Parser) consume(tknType TokenType) (*Token, error) {
 	if p.check(tknType) {
 		return p.advance(), nil
 	}
-	reportError(p.peek(), ErrMissingRightParen)
+	ReportError(p.peek(), ErrMissingRightParen)
 	return nil, ErrMissingRightParen
 }
 
@@ -291,10 +297,10 @@ func (p *Parser) consume(tknType TokenType) (*Token, error) {
 func (p *Parser) synchronize() {
 	p.advance()
 	for !p.isAtEnd() {
-		if prev := p.previous(); prev.token_type == SEMICOLON {
+		if prev := p.previous(); prev.Token_type == SEMICOLON {
 			return
 		}
-		switch p.peek().token_type {
+		switch p.peek().Token_type {
 			case CLASS, FUN, VAR, FOR, IF, WHILE, RETURN, PRINT:
 				return
 		}
@@ -303,6 +309,6 @@ func (p *Parser) synchronize() {
 	
 }
 
-func (p *Parser) parse() (Expr, error) {
+func (p *Parser) Parse() (Expr, error) {
 	return p.expression()  
 } // entry method

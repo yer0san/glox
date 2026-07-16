@@ -1,5 +1,6 @@
-package main
+package expr
 
+import . "github.com/yer0san/glox/token"
 
 type Expr interface {
 	Accept(v Visitor) (any, error)

@@ -1,7 +1,11 @@
-// after this, don't forget to separate in packages -- later
-package main 
+package interpreter 
 
-import "fmt"
+import (
+	"fmt"
+	. "github.com/yer0san/glox/token"
+	. "github.com/yer0san/glox/expr"
+	. "github.com/yer0san/glox/errors"
+)
 
 type Interpreter struct {}
 
@@ -17,16 +21,16 @@ func (i *Interpreter) VisitUnaryExpr(expr *Unary) (any, error) {
 	right, err := i.evaluate(expr.Right)
 
 	if err != nil {
-		reportError(&expr.Operator, err)
+		ReportError(&expr.Operator, err)
 		return nil, err
 	}
 
-	switch expr.Operator.token_type {
+	switch expr.Operator.Token_type {
 		case MINUS:
 			err := i.checkNumberOperand(right)
 
 			if err != nil {
-				reportError(&expr.Operator, err)
+				ReportError(&expr.Operator, err)
 				return nil, err
 			}
 
@@ -41,23 +45,23 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) (any, error) {
 	left, err := i.evaluate(expr.Left)
 
 	if err != nil {
-		reportError(&expr.Operator, err)
+		ReportError(&expr.Operator, err)
 		return nil, err
 	}
 
 	right, err := i.evaluate(expr.Right)
 
 	if err != nil {
-		reportError(&expr.Operator, err)
+		ReportError(&expr.Operator, err)
 		return nil, err
 	}
 
-	switch expr.Operator.token_type {
+	switch expr.Operator.Token_type {
 		case MINUS:
 			err := i.checkNumberOperands(left, right)
 
 			if err != nil {
-				reportError(&expr.Operator, err)
+				ReportError(&expr.Operator, err)
 				return nil, err
 			}
 			return left.(float64) - right.(float64), nil
@@ -74,13 +78,13 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) (any, error) {
 					return leftStr + rightStr, nil
 				}
 			}
-			reportError(&expr.Operator, ErrOperandsNotSameType)
+			ReportError(&expr.Operator, ErrOperandsNotSameType)
 			return nil, ErrOperandsNotSameType
 		case SLASH:
 			err := i.checkNumberOperands(left, right)
 
 			if err != nil {
-				reportError(&expr.Operator, err)
+				ReportError(&expr.Operator, err)
 				return nil, err
 			}
 
@@ -98,7 +102,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) (any, error) {
 			err := i.checkNumberOperands(left, right)
 
 			if err != nil {
-				reportError(&expr.Operator, err)
+				ReportError(&expr.Operator, err)
 				return nil, err
 			}
 
@@ -107,7 +111,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) (any, error) {
 			err := i.checkNumberOperands(left, right)
 
 			if err != nil {
-				reportError(&expr.Operator, err)
+				ReportError(&expr.Operator, err)
 				return nil, err
 			}
 
@@ -116,7 +120,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) (any, error) {
 			err := i.checkNumberOperands(left, right)
 
 			if err != nil {
-				reportError(&expr.Operator, err)
+				ReportError(&expr.Operator, err)
 				return nil, err
 			}
 
@@ -125,7 +129,7 @@ func (i *Interpreter) VisitBinaryExpr(expr *Binary) (any, error) {
 			err := i.checkNumberOperands(left, right)
 
 			if err != nil {
-				reportError(&expr.Operator, err)
+				ReportError(&expr.Operator, err)
 				return nil, err
 			}
 
@@ -173,7 +177,7 @@ func (i *Interpreter) checkNumberOperands(left any, right any) error {
 }
 
 // entry
-func (i *Interpreter) interpret(expr Expr) {
+func (i *Interpreter) Interpret(expr Expr) {
 	value, err := i.evaluate(expr)
 
 	if err != nil {
