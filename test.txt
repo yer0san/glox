@@ -1,9 +1,41 @@
-5 + 2
+print 5 + 2;
 
-var my = "hello"
-print(my)
+print "hello";
+print 4;
+
 // a comment :)
 /* this is a multiline comment
 that spans multiple lines
 */
-print(yelo)
+
+var a = "global a";
+var b = "global b";
+var c = "global c";
+{
+  var a = "outer a";
+  var b = "outer b";
+  {
+    var a = "inner a";
+    print a;
+    print b;
+    print c;
+  }
+  print a;
+  print b;
+  print c;
+}
+a = "my name is jeff";
+print a;
+print b;
+print c;
+
+var d = 1;
+
+{
+    var d = d + 3;
+    print d;
+}
+print d;
+
+
+// it understands this code, but i can't understand it :)
