@@ -1,57 +1,60 @@
 package printers
 
-import (
-	"fmt"
-	"strings"
-	. "github.com/yer0san/glox/expr"
-)
-
-type AstPrinter struct {}
-
-func (p *AstPrinter) Print(expr Expr) string {
-	res, _ := expr.Accept(p)
-	return res.(string) // hope this works
-} 
-
-func (p *AstPrinter) VisitBinaryExpr(expr *Binary) (any, error) {
-	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right), nil
-}
-
-func (p *AstPrinter) VisitGroupingExpr(expr *Grouping) (any, error) {
-	return p.parenthesize("group", expr.Expression), nil
-}
-
-func (p *AstPrinter) VisitLiteralExpr(expr *Literal) (any, error) {
-	if expr.Value == nil {
-		return "nil", nil
-	}
-	return fmt.Sprintf("%v", expr.Value), nil
-}
-
-func (p *AstPrinter) VisitUnaryExpr(expr *Unary) (any, error) {
-	return p.parenthesize(expr.Operator.Lexeme, expr.Right), nil
-}
-
-func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {
-	var builder strings.Builder
-
-	builder.WriteString("(")
-	builder.WriteString(name)
+// not needed anymore
 
 
-	for _, expr := range exprs {
-		builder.WriteString(" ")
-		res, _ := expr.Accept(p)
-		builder.WriteString(res.(string)) // hope this works
-	}
+// import (
+// 	"fmt"
+// 	"strings"
+// 	. "github.com/yer0san/glox/expr"
+// )
 
-	builder.WriteString(")")
+// type AstPrinter struct {}
 
-	return builder.String()
+// func (p *AstPrinter) Print(expr Expr) string {
+// 	res, _ := expr.Accept(p)
+// 	return res.(string) // hope this works
+// } 
 
-}
+// func (p *AstPrinter) VisitBinaryExpr(expr *Binary) (any, error) {
+// 	return p.parenthesize(expr.Operator.Lexeme, expr.Left, expr.Right), nil
+// }
 
-// TEST
+// func (p *AstPrinter) VisitGroupingExpr(expr *Grouping) (any, error) {
+// 	return p.parenthesize("group", expr.Expression), nil
+// }
+
+// func (p *AstPrinter) VisitLiteralExpr(expr *Literal) (any, error) {
+// 	if expr.Value == nil {
+// 		return "nil", nil
+// 	}
+// 	return fmt.Sprintf("%v", expr.Value), nil
+// }
+
+// func (p *AstPrinter) VisitUnaryExpr(expr *Unary) (any, error) {
+// 	return p.parenthesize(expr.Operator.Lexeme, expr.Right), nil
+// }
+
+// func (p *AstPrinter) parenthesize(name string, exprs ...Expr) string {
+// 	var builder strings.Builder
+
+// 	builder.WriteString("(")
+// 	builder.WriteString(name)
+
+
+// 	for _, expr := range exprs {
+// 		builder.WriteString(" ")
+// 		res, _ := expr.Accept(p)
+// 		builder.WriteString(res.(string)) // hope this works
+// 	}
+
+// 	builder.WriteString(")")
+
+// 	return builder.String()
+
+// }
+
+// -------------------------TEST---------------------------
 
 // func main() {
 // 	expression := &Binary{
