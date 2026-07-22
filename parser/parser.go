@@ -1,9 +1,10 @@
-package parser 
+package parser
 
 import (
-	. "github.com/yer0san/glox/token"
-	. "github.com/yer0san/glox/expr"
 	. "github.com/yer0san/glox/errors"
+	. "github.com/yer0san/glox/expr"
+	"github.com/yer0san/glox/stmt"
+	. "github.com/yer0san/glox/token"
 )
 
 type Parser struct {
@@ -15,8 +16,136 @@ func NewParser(tokens []*Token) *Parser{
 	return &Parser{Tokens: tokens}
 }
 
+func (p *Parser) declaration() (stmt.Stmt, error) {
+	if p.match(VAR) {
+		val, err := p.varDecl()
+
+		if err != nil {
+			p.synchronize()
+			return nil, err
+		}
+
+		return val, nil
+	}
+	val, err :=  p.statement()
+
+	if err != nil {
+		p.synchronize()
+		return nil, err
+	}
+
+	return val, nil
+}
+
+func (p *Parser) varDecl() (stmt.Stmt, error) {
+	name, err := p.consume(IDENTIFIER)
+
+	if err != nil {
+		return nil, err
+	}
+	
+	var initializer Expr
+
+	if (p.match(EQUAL)) {
+		initializer, err = p.expression();
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	// check if initializer gets initialized with the correct value
+	p.consume(SEMICOLON)
+	return &stmt.Var{Name: name, Initializer: initializer}, nil
+}
+
+func (p *Parser) statement() (stmt.Stmt, error) {
+	if p.match(PRINT) {
+		return p.printStatement()
+	}
+
+	if p.match(LEFT_BRACE) {
+		statements, err := p.block()
+
+		if err != nil {
+			return nil, err
+		}
+		return &stmt.Block{Statements:statements}, nil
+	}
+	return p.exprStatement()
+}
+
+func (p *Parser) block() ([]stmt.Stmt, error) {
+	var statements []stmt.Stmt
+
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+		statement, err := p.declaration()
+
+		if err != nil {
+			return nil, err
+		}
+		statements = append(statements, statement)
+	}
+	_, err := p.consume(RIGHT_BRACE)
+
+	if err != nil {
+		return nil, err
+	}
+	return statements, nil
+}
+
+func (p *Parser) printStatement() (stmt.Stmt, error) {
+	if p.match(VAR) {
+		// the variable name is a Literal
+		// ??
+	}
+	value, err := p.expression()
+
+	if err != nil {
+		return nil, err
+	}
+
+	p.consume(SEMICOLON)
+	return &stmt.Print{Expr: value}, nil
+}
+
+func (p *Parser) exprStatement() (stmt.Stmt, error) {
+	value, err := p.expression()
+
+	if err != nil {
+		return nil, err
+	}
+
+	p.consume(SEMICOLON)
+	return &stmt.Expression{Expr: value}, nil
+}
+
 func (p *Parser) expression() (Expr, error) {
-	return p.comma()
+	return p.assignment()
+}
+
+func (p *Parser) assignment() (Expr, error) {
+	expr, err := p.comma()
+
+	if err != nil {
+		return nil, err
+	}
+
+	if p.match(EQUAL) {
+		equals := p.previous()
+		value, err := p.assignment()
+
+		if err != nil {
+			return nil, err
+		}
+
+		if variable, ok := expr.(*Variable); ok {
+			return &Assign{Name: variable.Name, Value: value}, nil
+		}
+		ReportError(equals, ErrInvalidAssignmentTarget)
+		// return nil, ErrInvalidAssignmentTarget
+	}
+
+	return expr, nil
 }
 
 func (p *Parser) comma() (Expr, error) {
@@ -47,7 +176,7 @@ func (p *Parser) comma() (Expr, error) {
 
 		expr = &Binary {
 			Left: expr,
-			Operator: operator,
+			Operator: &operator,
 			Right: right,
 		}
 	}
@@ -83,7 +212,7 @@ func (p *Parser) equality() (Expr, error) {
 
 		expr = &Binary {
 			Left: expr,
-			Operator: operator,
+			Operator: &operator,
 			Right: right,
 		}
 	}
@@ -119,7 +248,7 @@ func (p *Parser) comparison() (Expr, error) {
 
 		expr = &Binary {
 			Left: expr,
-			Operator: operator,
+			Operator: &operator,
 			Right: right,
 		}
 	}
@@ -154,7 +283,7 @@ func (p *Parser) term() (Expr, error) {
 
 		expr = &Binary{
 			Left: expr,
-			Operator: operator,
+			Operator: &operator,
 			Right: right,
 		}
 	}
@@ -189,7 +318,7 @@ func (p *Parser) factor() (Expr, error) {
 
 		expr = &Binary{
 			Left: expr,
-			Operator: opr,
+			Operator: &opr,
 			Right: right,
 		}
 	}
@@ -205,7 +334,7 @@ func (p *Parser) unary() (Expr, error) {
 			return nil, err
 		}
 
-		return &Unary{Operator: opr, Right: right}, nil
+		return &Unary{Operator: &opr, Right: right}, nil
 	}
 	return p.primary()
 }
@@ -219,6 +348,10 @@ func (p *Parser) primary() (Expr, error) {
 	}
 	if p.match(NIL) {
 		return &Literal{Value: nil}, nil
+	}
+
+	if p.match(IDENTIFIER) {
+		return &Variable{Name: p.previous()}, nil
 	}
 
 	if p.match(NUMBER, STRING) {
@@ -289,6 +422,21 @@ func (p *Parser) consume(tknType TokenType) (*Token, error) {
 	if p.check(tknType) {
 		return p.advance(), nil
 	}
+
+	if tknType == RIGHT_BRACE {
+		ReportError(p.peek(), ErrExpectedRightBrace)
+		return nil, ErrExpectedRightBrace
+	}
+
+	if tknType == IDENTIFIER {
+		ReportError(p.peek(), ErrExpectedVariableName)
+		return nil, ErrExpectedVariableName
+	}
+
+	if tknType == SEMICOLON {
+		ReportError(p.peek(), ErrExpectSemicolonAfterExpr)
+		return nil, ErrExpectSemicolonAfterExpr
+	}
 	ReportError(p.peek(), ErrMissingRightParen)
 	return nil, ErrMissingRightParen
 }
@@ -309,6 +457,15 @@ func (p *Parser) synchronize() {
 	
 }
 
-func (p *Parser) Parse() (Expr, error) {
-	return p.expression()  
+func (p *Parser) Parse() ([]stmt.Stmt, error) {
+	var statements []stmt.Stmt
+	for !p.isAtEnd() {
+		stmt, err := p.declaration()
+
+		if err != nil{
+			return nil, err
+		}
+		statements = append(statements, stmt)
+	}
+	return statements, nil
 } // entry method

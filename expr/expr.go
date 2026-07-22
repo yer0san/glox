@@ -8,7 +8,7 @@ type Expr interface {
 
 type Binary struct {
 	Left Expr
-	Operator Token
+	Operator *Token
 	Right Expr
 }
 
@@ -21,8 +21,17 @@ type Grouping struct {
 }
 
 type Unary struct {
-	Operator Token
+	Operator *Token
 	Right Expr
+}
+
+type Variable struct {
+	Name *Token
+}
+
+type Assign struct {
+	Name *Token
+	Value Expr
 }
 
 type Visitor interface {
@@ -30,6 +39,8 @@ type Visitor interface {
 	VisitLiteralExpr(expr *Literal) (any, error)
 	VisitGroupingExpr(expr *Grouping) (any, error)
 	VisitUnaryExpr(expr *Unary) (any, error)
+	VisitVariableExpr(expr *Variable) (any, error) // idk if this is the right way????
+	VisitAssignExpr(expr *Assign) (any, error)
 }
 
 func (b *Binary) Accept(v Visitor) (any, error) {
@@ -52,6 +63,15 @@ func (u *Unary) Accept(v Visitor) (any, error) {
 	return res, nil
 }
 
+func (p *Variable) Accept(v Visitor) (any, error) {
+	res, _ := v.VisitVariableExpr(p)
+	return res, nil
+}
+
+func (a *Assign) Accept(v Visitor) (any, error) {
+	res, _ := v.VisitAssignExpr(a)
+	return res, nil 
+}
 
 
 // ----------------------------------------------------

@@ -1,14 +1,17 @@
 package lox
 
 import (
-	"os"
 	"bufio"
 	"fmt"
+	"os"
+
+	"github.com/yer0san/glox/environment"
 	. "github.com/yer0san/glox/errors"
-	. "github.com/yer0san/glox/printers"
+
+	// . "github.com/yer0san/glox/printers"
 	. "github.com/yer0san/glox/interpreter"
-	. "github.com/yer0san/glox/parser"
 	. "github.com/yer0san/glox/lexer"
+	. "github.com/yer0san/glox/parser"
 )
 
 type Lox struct {
@@ -48,17 +51,17 @@ func (l *Lox) run(source string) {
 	tokens := lexer.ScanTokens()
 
 	parser := Parser{Tokens: tokens}
-	expr, err := parser.Parse()
+	statements, err := parser.Parse()
 
 	if err != nil {
 		// idk what to do here
 		// maybe get the program to go into a panic mode or something
 		return
 	}
-	printer := &AstPrinter{}
-	fmt.Println(printer.Print(expr))
+	// printer := &AstPrinter{}
+	// fmt.Println(printer.Print(expr))
 	
-	interpreter := Interpreter{}
+	interpreter := Interpreter{Environment: environment.NewEnvironment()}
 
-	interpreter.Interpret(expr)
+	interpreter.Interpret(statements)
 }

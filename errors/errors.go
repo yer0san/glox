@@ -12,14 +12,21 @@ var HadError bool = false
 var ErrUnexpectedChar = errors.New("unexpected character")
 var ErrunterminatedMultilineComment = errors.New("Unterminated multiline comment")
 var ErrUnterminatedString = errors.New("unterminated string")
-var ErrMissingRightParen = errors.New("Expect ')' after expression")
-var ErrExpectExpression = errors.New("Expect expression")
+var ErrMissingRightParen = errors.New("Expected ')' after expression")
+var ErrExpectExpression = errors.New("Expected expression")
 
 var ErrExpectedLeftOpr = errors.New("Expected left operand for the operator")
 
 var ErrOperandNotNumber = errors.New("Operand must be number.")
 var ErrOperandsNotSameType = errors.New("Operands must be two numbers or two strings.")
 
+var ErrExpectSemicolonAfterExpr = errors.New("Expected ';' after value or expression.")
+
+var ErrExpectedVariableName = errors.New("Expected variable name.")
+
+var ErrInvalidAssignmentTarget = errors.New("Invalid assignment target")
+
+var ErrExpectedRightBrace = errors.New("Expected '}' after block")
 
 func ReportLexingError(line int, err error) {
 	Report(line, "", err)
@@ -37,4 +44,9 @@ func ReportError(token *Token, err error) {
 func Report(line int, where string, err error) {
 	fmt.Printf("[line %d] Error %s: %s\n", line, where, err)
 	HadError = true;
+}
+
+func ErrUndefinedVariable(lexeme string) error {
+	mes := fmt.Sprintf("undefined variable %s.", lexeme)
+	return errors.New(mes)
 }
