@@ -163,6 +163,29 @@ func (i *Interpreter) VisitAssignExpr(expr *Assign) (any, error) {
 	return value, nil
 }
 
+func (i *Interpreter) VisitLogicalExpr(expr *Logical) (any, error) {
+	left, err := i.evaluate(expr.Left)
+
+	if err != nil {
+		return nil, err
+	}
+
+	switch expr.Operator.Token_type { // handles short circuiting
+		case OR:
+			if i.isTruthy(left) {
+				return left, nil
+			}
+		default:
+			if expr.Operator.Token_type != AND {
+				fmt.Println("PROBLEM")
+			}
+			if !i.isTruthy(left) {
+				return left, nil
+			}
+	}
+	return i.evaluate(expr.Right)
+}
+
 
 func (i *Interpreter) VisitExprStmt(statement *stmt.Expression) {
 	i.evaluate(statement.Expr)
@@ -197,6 +220,59 @@ func (i *Interpreter) VisitVarStmt(statement *stmt.Var) {
 func (i *Interpreter) VisitBlockStmt(stmt *stmt.Block) {
 	i.executeBlock(stmt.Statements, NewEnclosingEnvironment(i.Environment))
 }
+
+func (i *Interpreter) VisitIfStmt(stmt *stmt.If) {
+	value, err := i.evaluate(stmt.Condition)
+
+	if err != nil {
+		fmt.Println("IF STATEMENT: IDK WHAT TO DO HERE")
+		return
+	}
+	if i.isTruthy(value) {
+		i.execute(stmt.ThenBranch)
+	} else if (stmt.ElseBranch != nil) {
+		i.execute(stmt.ElseBranch)
+	}
+}
+
+func (i *Interpreter) VisitWhileStmt(stmt *stmt.While) {
+	value, err := i.evaluate(stmt.Condition)
+
+	if err != nil {
+		fmt.Println("WHILE LOOP, ERROR check it later")
+		return
+	}
+
+	for i.isTruthy(value) {
+		i.execute(stmt.Body)
+		value, _ = i.evaluate(stmt.Condition)
+	}
+}
+
+func (i *Interpreter) VisitForStmt(stmt *stmt.For) {
+	// check if init exists then execute it
+	if stmt.Init != nil {
+		i.execute(stmt.Init)
+	}
+	// check if Condition exists and evaluate it
+	if stmt.Condition != nil {
+		value, _ := i.evaluate(stmt.Condition)
+		for i.isTruthy(value) {
+			i.execute(stmt.Body)
+			if stmt.Increment != nil {
+				i.evaluate(stmt.Increment)
+			}
+			value, _ = i.evaluate(stmt.Condition)
+		}
+	} else {
+		for {
+			i.execute(stmt.Body)
+			if stmt.Increment != nil {
+				i.evaluate(stmt.Increment)
+			}
+		}
+	}
+} // is this it??
 
 // HELPERS
 func (i *Interpreter) executeBlock(statements []stmt.Stmt, environment *Environment) {

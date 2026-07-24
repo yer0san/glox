@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"fmt"
 	. "github.com/yer0san/glox/errors"
 	. "github.com/yer0san/glox/expr"
 	"github.com/yer0san/glox/stmt"
@@ -53,7 +54,7 @@ func (p *Parser) varDecl() (stmt.Stmt, error) {
 			return nil, err
 		}
 	}
-	// check if initializer gets initialized with the correct value
+
 	p.consume(SEMICOLON)
 	return &stmt.Var{Name: name, Initializer: initializer}, nil
 }
@@ -71,13 +72,161 @@ func (p *Parser) statement() (stmt.Stmt, error) {
 		}
 		return &stmt.Block{Statements:statements}, nil
 	}
+
+	if p.match(IF) {
+		return p.ifStatement()
+	}
+
+	if p.match(WHILE) {
+		return p.whileStatement()
+	}
+
+	if p.match(FOR) {
+		return p.forStatement()
+	}
 	return p.exprStatement()
+}
+
+func (p *Parser) forStatement() (stmt.Stmt, error) {
+	p.consume(LEFT_PAREN)
+
+	var init stmt.Stmt
+	var condition Expr
+	var increment Expr
+	var err error
+
+	if p.match(SEMICOLON) {
+		// nothing i guess
+	} else if p.match(VAR) {
+		fmt.Println("varDecl...")
+		init, err = p.varDecl()
+
+		if err != nil {
+			return nil, err
+		} 
+	} else {
+		init, err = p.exprStatement()
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	if !p.check(SEMICOLON) {
+		fmt.Println("condition...")
+		condition, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	p.consume(SEMICOLON)
+	if !p.check(RIGHT_PAREN) {
+		fmt.Println("increment...")
+		increment, err = p.expression()
+		if err != nil {
+			return nil, err
+		}
+	}
+	p.consume(RIGHT_PAREN)
+
+	if p.match(LEFT_BRACE) {
+		body, err :=  p.block()
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &stmt.For{
+			Init: init,
+			Condition: condition,
+			Increment: increment,
+			Body: &stmt.Block{Statements: body},
+		}, nil
+	}
+
+	body, err := p.statement()
+
+	if err != nil {
+		return nil, err
+	}
+	return &stmt.For{
+			Init: init,
+			Condition: condition,
+			Increment: increment,
+			Body: body,
+		}, nil
+}
+
+
+func (p *Parser) whileStatement() (stmt.Stmt, error) {
+	p.consume(LEFT_PAREN)
+	condition, err := p.expression()
+
+	if err != nil {
+		return nil, err
+	}
+
+	p.consume(RIGHT_PAREN)
+
+	if p.match(LEFT_BRACE) {
+		body, err :=  p.block()
+
+		if err != nil {
+			return nil, err
+		}
+
+		return &stmt.While{
+			Condition: condition,
+			Body: &stmt.Block{Statements: body},
+		}, nil
+	}
+
+	body, err := p.statement()
+
+	if err != nil {
+		return nil, err
+	}
+	return &stmt.While{
+		Condition: condition,
+		Body: body,
+	}, nil
+}
+
+func (p *Parser) ifStatement() (stmt.Stmt, error) {
+	p.consume(LEFT_PAREN)
+	condition, err := p.expression()
+
+	if err != nil {
+		return nil, err
+	}
+
+	p.consume(RIGHT_PAREN)
+
+	thenBranch, err := p.statement()
+
+	if err != nil {
+		return nil, err
+	}
+
+	var elseBranch stmt.Stmt
+
+	if p.match(ELSE) {
+		elseBranch, err = p.statement()
+
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &stmt.If{
+		Condition: condition, 
+		ThenBranch: thenBranch,
+		ElseBranch: elseBranch,
+	}, nil
 }
 
 func (p *Parser) block() ([]stmt.Stmt, error) {
 	var statements []stmt.Stmt
 
-	for !p.check(RIGHT_BRACE) && !p.isAtEnd() {
+	for !p.check(RIGHT_BRACE) && !p.isAtEnd() { 
 		statement, err := p.declaration()
 
 		if err != nil {
@@ -124,7 +273,7 @@ func (p *Parser) expression() (Expr, error) {
 }
 
 func (p *Parser) assignment() (Expr, error) {
-	expr, err := p.comma()
+	expr, err := p.logic_or()
 
 	if err != nil {
 		return nil, err
@@ -148,16 +297,88 @@ func (p *Parser) assignment() (Expr, error) {
 	return expr, nil
 }
 
+func (p *Parser) logic_or() (Expr, error) {
+	if p.match(OR) {
+		ReportError(p.previous(), ErrExpectedLeftExpr)
+		_, err := p.logic_and()
+		
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, ErrExpectedLeftExpr
+	}
+
+	expr, err := p.logic_and()
+
+	if err != nil {
+		return nil, err
+	}
+	for p.match(OR) {
+		opr := p.previous()
+
+		right, err := p.logic_and()
+
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &Logical{
+			Left: expr,
+			Operator: opr,
+			Right: right,
+		}
+	}
+
+	return expr, nil
+
+}
+
+func (p *Parser) logic_and() (Expr, error) {
+	if p.match(AND) {
+		ReportError(p.previous(), ErrExpectedLeftExpr)
+		_, err := p.logic_and()
+		
+		if err != nil {
+			return nil, err
+		}
+
+		return nil, ErrExpectedLeftExpr
+	}
+	
+	expr, err := p.comma() // short circuiting is the interpreter's job
+
+	if err != nil {
+		return nil, err
+	}
+
+	for p.match(AND) {
+		opr := p.previous()
+		right, err := p.comma()
+
+		if err != nil {
+			return nil, err
+		}
+
+		expr = &Logical{
+			Left: expr,
+			Operator: opr,
+			Right: right,
+		}
+	}
+	return expr, nil
+}
+
 func (p *Parser) comma() (Expr, error) {
 	if p.match(COMMA) {
-		ReportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftExpr)
 
 		_, err := p.equality()
 		
 		if err != nil {
 			return nil, err
 		}
-		return nil, ErrExpectedLeftOpr
+		return nil, ErrExpectedLeftExpr
 	}
 
 	expr, err := p.equality()
@@ -185,14 +406,14 @@ func (p *Parser) comma() (Expr, error) {
 
 func (p *Parser) equality() (Expr, error) {
 	if p.match(BANG_EQUAL, EQUAL_EQUAL) {
-		ReportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftExpr)
 
 		_, err := p.comparison()
 		
 		if err != nil {
 			return nil, err
 		}
-		return nil, ErrExpectedLeftOpr
+		return nil, ErrExpectedLeftExpr
 	}
 
 	expr, err := p.comparison()
@@ -221,14 +442,14 @@ func (p *Parser) equality() (Expr, error) {
 
 func (p *Parser) comparison() (Expr, error) {
 	if p.match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL) {
-		ReportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftExpr)
 
 		_, err := p.term()
 		
 		if err != nil {
 			return nil, err
 		}
-		return nil, ErrExpectedLeftOpr
+		return nil, ErrExpectedLeftExpr
 	}
 
 	expr, err := p.term()
@@ -257,14 +478,14 @@ func (p *Parser) comparison() (Expr, error) {
 
 func (p *Parser) term() (Expr, error) {
 	if p.match(MINUS, PLUS) {
-		ReportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftExpr)
 
 		_, err := p.factor()
 		
 		if err != nil {
 			return nil, err
 		}
-		return nil, ErrExpectedLeftOpr
+		return nil, ErrExpectedLeftExpr
 	}
 
 	expr, err := p.factor()
@@ -292,14 +513,14 @@ func (p *Parser) term() (Expr, error) {
 
 func (p *Parser) factor() (Expr, error) {
 	if p.match(SLASH, STAR) {
-		ReportError(p.previous(), ErrExpectedLeftOpr)
+		ReportError(p.previous(), ErrExpectedLeftExpr)
 
 		_, err := p.unary()
 		
 		if err != nil {
 			return nil, err
 		}
-		return nil, ErrExpectedLeftOpr
+		return nil, ErrExpectedLeftExpr
 	}
 
 	expr, err := p.unary()
@@ -417,7 +638,6 @@ func (p *Parser) previous() *Token {
 	return p.Tokens[p.current-1]
 }
 
-
 func (p *Parser) consume(tknType TokenType) (*Token, error) {
 	if p.check(tknType) {
 		return p.advance(), nil
@@ -426,6 +646,15 @@ func (p *Parser) consume(tknType TokenType) (*Token, error) {
 	if tknType == RIGHT_BRACE {
 		ReportError(p.peek(), ErrExpectedRightBrace)
 		return nil, ErrExpectedRightBrace
+	}
+
+	if tknType == LEFT_PAREN {
+		ReportError(p.peek(), ErrExpectedLeftParen)
+		return nil, ErrExpectedLeftParen
+	}
+	if tknType == RIGHT_PAREN {
+		ReportError(p.peek(), ErrExpectedRightParen)
+		return nil, ErrExpectedRightParen
 	}
 
 	if tknType == IDENTIFIER {

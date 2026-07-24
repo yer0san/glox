@@ -12,6 +12,12 @@ type Binary struct {
 	Right Expr
 }
 
+type Logical struct {
+	Left Expr
+	Operator *Token
+	Right Expr
+}
+
 type Literal struct {
 	Value any
 }
@@ -41,6 +47,7 @@ type Visitor interface {
 	VisitUnaryExpr(expr *Unary) (any, error)
 	VisitVariableExpr(expr *Variable) (any, error) // idk if this is the right way????
 	VisitAssignExpr(expr *Assign) (any, error)
+	VisitLogicalExpr(expr *Logical) (any, error)
 }
 
 func (b *Binary) Accept(v Visitor) (any, error) {
@@ -71,6 +78,11 @@ func (p *Variable) Accept(v Visitor) (any, error) {
 func (a *Assign) Accept(v Visitor) (any, error) {
 	res, _ := v.VisitAssignExpr(a)
 	return res, nil 
+}
+
+func (l *Logical) Accept(v Visitor) (any, error) {
+	res, _ := v.VisitLogicalExpr(l)
+	return res, nil
 }
 
 
