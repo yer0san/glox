@@ -1,41 +1,15 @@
-print 5 + 2;
+print true or false;
 
-print "hello";
-print 4;
+var x = 0;
 
-// a comment :)
-/* this is a multiline comment
-that spans multiple lines
-*/
+// for loops :)
 
-var a = "global a";
-var b = "global b";
-var c = "global c";
-{
-  var a = "outer a";
-  var b = "outer b";
-  {
-    var a = "inner a";
-    print a;
-    print b;
-    print c;
-  }
+var a = 1;
+var temp;
+
+for (;a < 1000;) {
   print a;
-  print b;
-  print c;
+  a = a + 1;
 }
-a = "my name is jeff";
-print a;
-print b;
-print c;
 
-var d = 1;
-
-{
-    var d = d + 3;
-    print d;
-}
-print d;
-
-
-// it understands this code, but i can't understand it :)
+// it works, without desugaring
