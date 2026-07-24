@@ -15,7 +15,7 @@ var ErrUnterminatedString = errors.New("unterminated string")
 var ErrMissingRightParen = errors.New("Expected ')' after expression")
 var ErrExpectExpression = errors.New("Expected expression")
 
-var ErrExpectedLeftOpr = errors.New("Expected left operand for the operator")
+var ErrExpectedLeftExpr = errors.New("Expected left expression for the operator")
 
 var ErrOperandNotNumber = errors.New("Operand must be number.")
 var ErrOperandsNotSameType = errors.New("Operands must be two numbers or two strings.")
@@ -27,6 +27,9 @@ var ErrExpectedVariableName = errors.New("Expected variable name.")
 var ErrInvalidAssignmentTarget = errors.New("Invalid assignment target")
 
 var ErrExpectedRightBrace = errors.New("Expected '}' after block")
+
+var ErrExpectedLeftParen = errors.New("Expected '('")
+var ErrExpectedRightParen = errors.New("Expected ')'")
 
 func ReportLexingError(line int, err error) {
 	Report(line, "", err)
